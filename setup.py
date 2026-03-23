@@ -7,6 +7,7 @@ import time
 import pathlib
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 from openai import OpenAI
 
 
@@ -142,22 +143,11 @@ def tree_to_html(node: dict, depth: int = 0) -> str:
     ext = pathlib.Path(node["name"]).suffix.lower()
 
     if ext in VIEWABLE_EXTS:
-        # onclick: React 내부 setter로 숨김 input 값 주입 → Enter keydown으로 즉시 rerun
+        # components.html(iframe) 안에서 실행되므로 단순 함수 호출로 충분
+        # 백슬래시·싱글쿼트만 이스케이프 (JS 문자열 리터럴 안전성)
         safe_path = node["path"].replace("\\", "\\\\").replace("'", "\\'")
-        js_raw = (
-            "(function(){"
-            "var el=document.querySelector(\"input[aria-label='_tree_file_']\");"
-            "if(!el)return;"
-            "var s=Object.getOwnPropertyDescriptor("
-            "window.HTMLInputElement.prototype,'value').set;"
-            f"s.call(el,'{safe_path}|{ext}');"
-            "el.dispatchEvent(new Event('input',{bubbles:true}));"
-            "el.dispatchEvent(new KeyboardEvent("
-            "'keydown',{key:'Enter',keyCode:13,bubbles:true}));"
-            "})()"
-        )
-        # HTML 속성 안에 쓸 수 있도록 이스케이프 (& " < > → 엔티티)
-        onclick_attr = _html.escape(js_raw, quote=True)
+        onclick = f"selectFile('{safe_path}', '{ext}')"
+        onclick_attr = _html.escape(onclick, quote=True)
         return (
             f'<div style="margin-left:{indent_px + 20}px; padding:2px 4px;">'
             f'<span onclick="{onclick_attr}"'
@@ -207,33 +197,10 @@ if _raw_file_selection and "|" in _raw_file_selection:
     # 다음 rerun에서 중복 처리 방지
     st.session_state["tree_file_input"] = ""
 
-# ── CSS ───────────────────────────────────────────────────────────────────────
+# ── CSS (숨김 input 전용 — Streamlit 메인 페이지 적용) ──────────────────────
 st.markdown("""
 <style>
-  /* 숨김 text_input 전체 감춤 */
-  div:has(> div > input[aria-label="_tree_file_"]) {
-    display: none !important;
-  }
-
-  /* 트리 +/- 토글 배지 */
-  .tree-toggle::before {
-    content: "+";
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 16px;
-    height: 16px;
-    font-size: 0.82rem;
-    font-weight: bold;
-    color: #555;
-    background: #e9ecef;
-    border: 1px solid #ced4da;
-    border-radius: 3px;
-    margin-right: 4px;
-    flex-shrink: 0;
-  }
-  details[open] > summary .tree-toggle::before { content: "−"; }
-  details > summary:hover { background: #f1f3f5; border-radius: 4px; }
+  div:has(> div > input[aria-label="_tree_file_"]) { display: none !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -244,13 +211,53 @@ st.caption(f"기준 경로: `{BASE_DIR}`")
 tree_data: dict = build_tree(BASE_DIR)
 tree_html = tree_to_html(tree_data, depth=0)
 
-st.markdown(
-    f'<div style="background:#f8f9fa; border:1px solid #dee2e6; border-radius:8px;'
-    f' padding:16px; max-height:520px; overflow-y:auto; font-family:monospace;">'
-    f'{tree_html}'
-    f'</div>',
-    unsafe_allow_html=True,
+# selectFile: iframe(window.parent) 경유로 Streamlit 메인 페이지의 숨김 input에 값 주입
+# components.html은 iframe으로 렌더링되므로 <script>·onclick이 정상 실행됨
+_SELECT_JS = """
+function selectFile(path, ext) {
+  try {
+    var el = window.parent.document.querySelector("input[aria-label='_tree_file_']");
+    if (!el) { console.warn('[tree] input not found'); return; }
+    var s = Object.getOwnPropertyDescriptor(
+      window.parent.HTMLInputElement.prototype, 'value').set;
+    s.call(el, path + '|' + ext);
+    el.dispatchEvent(new window.parent.Event('input', {bubbles: true}));
+    el.dispatchEvent(new window.parent.KeyboardEvent('keydown',
+      {key: 'Enter', keyCode: 13, bubbles: true}));
+  } catch(e) { console.error('[tree] selectFile error:', e); }
+}
+"""
+
+_TREE_COMPONENT_CSS = """
+  html, body { margin: 0; padding: 0; }
+  body { padding: 12px; font-family: monospace;
+         background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; }
+  .tree-toggle::before {
+    content: "+";
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px; font-size: 0.82rem; font-weight: bold;
+    color: #555; background: #e9ecef; border: 1px solid #ced4da;
+    border-radius: 3px; margin-right: 4px; flex-shrink: 0;
+  }
+  details[open] > summary .tree-toggle::before { content: "−"; }
+  details > summary {
+    cursor: pointer; padding: 3px 4px; border-radius: 4px;
+    list-style: none; display: flex; align-items: center; gap: 4px;
+    font-size: 0.88rem; user-select: none;
+  }
+  details > summary:hover { background: #f1f3f5; }
+"""
+
+_component_html = (
+    "<!DOCTYPE html><html><head><meta charset='utf-8'>"
+    "<style>" + _TREE_COMPONENT_CSS + "</style>"
+    "</head><body>"
+    + tree_html
+    + "<script>" + _SELECT_JS + "</script>"
+    + "</body></html>"
 )
+
+components.html(_component_html, height=500, scrolling=True)
 
 # ── 선택된 파일 내용 표시 ────────────────────────────────────────────────────
 if st.session_state.selected_file:
