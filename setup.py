@@ -217,12 +217,6 @@ components.html(
     scrolling=True,
 )
 
-st.markdown("##### 📋 트리 구조 (dict)")
-if tree_data is not None:
-    st.json(tree_data)
-else:
-    st.caption("트리 데이터가 없습니다.")
-
 # ── 선택 파일: path로 읽기, 화면에는 파일명 위주 ───────────────────────────────
 if st.session_state.selected_file:
     fp = pathlib.Path(st.session_state.selected_file)
