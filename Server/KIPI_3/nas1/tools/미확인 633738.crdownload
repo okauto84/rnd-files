@@ -1,0 +1,1500 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "ee622e17-b2a8-4c9d-9e9d-47ab2ff01c45",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "dataset_path = {\n",
+    "        '자동구축데이터셋': {f'{i}차수': f'01_org_datasets/자동구축데이터셋_{i}차수_전달용.json' for i in range(1,9)},  # ✅ 7차 추가\n",
+    "        '수작업데이터셋': {f'{i}차수': f'01_org_datasets/수작업구축데이터_{i}차수_전달용.json' for i in range(1,6)},  # ✅ 5차 추가\n",
+    "    }"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "5db09338-e75c-4db3-bb90-1424e9ba201b",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{'자동구축데이터셋': {'1차수': '01_org_datasets/자동구축데이터셋_1차수_전달용.json',\n",
+       "  '2차수': '01_org_datasets/자동구축데이터셋_2차수_전달용.json',\n",
+       "  '3차수': '01_org_datasets/자동구축데이터셋_3차수_전달용.json',\n",
+       "  '4차수': '01_org_datasets/자동구축데이터셋_4차수_전달용.json',\n",
+       "  '5차수': '01_org_datasets/자동구축데이터셋_5차수_전달용.json',\n",
+       "  '6차수': '01_org_datasets/자동구축데이터셋_6차수_전달용.json',\n",
+       "  '7차수': '01_org_datasets/자동구축데이터셋_7차수_전달용.json',\n",
+       "  '8차수': '01_org_datasets/자동구축데이터셋_8차수_전달용.json'},\n",
+       " '수작업데이터셋': {'1차수': '01_org_datasets/수작업구축데이터_1차수_전달용.json',\n",
+       "  '2차수': '01_org_datasets/수작업구축데이터_2차수_전달용.json',\n",
+       "  '3차수': '01_org_datasets/수작업구축데이터_3차수_전달용.json',\n",
+       "  '4차수': '01_org_datasets/수작업구축데이터_4차수_전달용.json',\n",
+       "  '5차수': '01_org_datasets/수작업구축데이터_5차수_전달용.json'}}"
+      ]
+     },
+     "execution_count": 4,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "dataset_path"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "ec5dc272-0752-463c-8224-5d192d6f6193",
+   "metadata": {
+    "scrolled": true
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "{'1차수': '01_org_datasets/자동구축데이터셋_1차수_전달용.json',\n",
+      " '2차수': '01_org_datasets/자동구축데이터셋_2차수_전달용.json',\n",
+      " '3차수': '01_org_datasets/자동구축데이터셋_3차수_전달용.json',\n",
+      " '4차수': '01_org_datasets/자동구축데이터셋_4차수_전달용.json',\n",
+      " '5차수': '01_org_datasets/자동구축데이터셋_5차수_전달용.json',\n",
+      " '6차수': '01_org_datasets/자동구축데이터셋_6차수_전달용.json',\n",
+      " '7차수': '01_org_datasets/자동구축데이터셋_7차수_전달용.json',\n",
+      " '8차수': '01_org_datasets/자동구축데이터셋_8차수_전달용.json'}\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "데이터셋 로드 중:  12%|█▎        | 1/8 [00:00<00:01,  6.72it/s]"
+     ]
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "6ec20123296b43e28a0d305eaeeabd9f",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Generating train split: 0 examples [00:00, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "데이터셋 로드 중:  88%|████████▊ | 7/8 [00:11<00:01,  1.67s/it]"
+     ]
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "77b5b5b7f3d2469694e8d4fc742ba07c",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Generating train split: 0 examples [00:00, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "데이터셋 로드 중: 100%|██████████| 8/8 [00:20<00:00,  2.60s/it]\n"
+     ]
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "596302c06c304442b65783693bb70f2d",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Creating parquet from Arrow format:   0%|          | 0/3015 [00:00<?, ?ba/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "✅ 병합 완료: ./02_prep_datasets/자동구축데이터셋_전처리완료 (3,014,546 rows)\n",
+      "{'1차수': '01_org_datasets/수작업구축데이터_1차수_전달용.json',\n",
+      " '2차수': '01_org_datasets/수작업구축데이터_2차수_전달용.json',\n",
+      " '3차수': '01_org_datasets/수작업구축데이터_3차수_전달용.json',\n",
+      " '4차수': '01_org_datasets/수작업구축데이터_4차수_전달용.json',\n",
+      " '5차수': '01_org_datasets/수작업구축데이터_5차수_전달용.json'}\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "데이터셋 로드 중:   0%|          | 0/5 [00:00<?, ?it/s]"
+     ]
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "e2d70e5f925a4c0fb52b588bb532a499",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Generating train split: 0 examples [00:00, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "데이터셋 로드 중: 100%|██████████| 5/5 [00:04<00:00,  1.24it/s]\n"
+     ]
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "e8a05113f6594d71be14f05bcac93c93",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Creating parquet from Arrow format:   0%|          | 0/316 [00:00<?, ?ba/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "✅ 병합 완료: ./02_prep_datasets/수작업데이터셋_전처리완료 (315,236 rows)\n",
+      "필터링할 데이터 선정\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "100%|██████████| 553175/553175 [00:00<00:00, 1975968.44it/s]\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "필터링 시작\n"
+     ]
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "62252f3303e14fdb9d5fb5951c96de96",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Filter (num_proc=16):   0%|          | 0/3014546 [00:00<?, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "ccd83750dad24018b85d0bab9f8210b5",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Filter (num_proc=16):   0%|          | 0/2976003 [00:00<?, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "403b608a1e844cb49598225b701d2e0e",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Filter (num_proc=16):   0%|          | 0/315236 [00:00<?, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "f531b94537e2403db5d6ac8825530863",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Filter (num_proc=16):   0%|          | 0/305094 [00:00<?, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "필터링 끝\n",
+      "df 병합 시작\n",
+      "df 저장 완료\n",
+      "applno2text\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "텍스트 데이터 로드 중:   0%|          | 0/4 [00:00<?, ?it/s]"
+     ]
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "bdbff597a5ad41deb383e33de43dc07c",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Loading dataset from disk:   0%|          | 0/23 [00:00<?, ?it/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "34f56639a3014ac6830e92ea4d89e439",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Filter (num_proc=16):   0%|          | 0/5700333 [00:00<?, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "텍스트 데이터 로드 중:  25%|██▌       | 1/4 [00:22<01:06, 22.30s/it]"
+     ]
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "a1d82f9bf86043e3a5012e3d6cc2ebd0",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Loading dataset from disk:   0%|          | 0/23 [00:00<?, ?it/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "e83384eecb7e4472a2301de0aebe2502",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Filter (num_proc=16):   0%|          | 0/5700333 [00:00<?, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "텍스트 데이터 로드 중:  50%|█████     | 2/4 [00:45<00:45, 22.75s/it]"
+     ]
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "389d3fff27c14896a0fffba42af6a328",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Loading dataset from disk:   0%|          | 0/23 [00:00<?, ?it/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "8758d64fb5c447e5af0448023dfc4bc8",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Filter (num_proc=16):   0%|          | 0/5700333 [00:00<?, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "텍스트 데이터 로드 중:  75%|███████▌  | 3/4 [01:08<00:22, 22.86s/it]"
+     ]
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "01a5c36b796444ceb6948a7468722f79",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Loading dataset from disk:   0%|          | 0/23 [00:00<?, ?it/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "e36a77ca5e9143f3a19df2b104f17520",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Filter (num_proc=16):   0%|          | 0/5700331 [00:00<?, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "텍스트 데이터 로드 중: 100%|██████████| 4/4 [01:32<00:00, 23.08s/it]\n"
+     ]
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "0ff9d223d40443ab96d1bb9db39a372f",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Saving the dataset (0/11 shards):   0%|          | 0/2643671 [00:00<?, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "b5f42b6ce0e042838ae0a8ba5c8be3d9",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Map (num_proc=32):   0%|          | 0/2643671 [00:00<?, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "그룹화 중: 100%|██████████| 2643671/2643671 [01:34<00:00, 27865.45it/s]\n"
+     ]
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "f98769a7b73a495081a28f022b2417ec",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Saving the dataset (0/10 shards):   0%|          | 0/545507 [00:00<?, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "applno2text 생성 중: 100%|██████████| 545507/545507 [00:25<00:00, 21003.17it/s]\n",
+      "anchor-positive 생성: 100%|██████████| 276917/276917 [00:07<00:00, 35959.40it/s]\n"
+     ]
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "3c393b0a0cef4259b8210de5f38e71a0",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Saving the dataset (0/2 shards):   0%|          | 0/42106 [00:00<?, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "✅ anchor_positive_dataset 저장 (42106)\n",
+      "📂 기존 valid 로드: /nasdata/workspace/2025/14_PatentSearch_2025/yhj/251015_valid_변경실험/02_prep_datasets/valid_doc_dataset\n",
+      "🔍 기존 valid에 없는 신규 데이터만 추출 중...\n"
+     ]
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "02ecbb75b9864f549735adb006c0c691",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Filter:   0%|          | 0/42106 [00:00<?, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "✅ 신규 데이터 개수: 39280\n"
+     ]
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "0e4da7c7548f4f6da251ea6d60dcce72",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Filter:   0%|          | 0/39280 [00:00<?, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "6faacda6e2364bc4bf79284e66c50155",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Filter:   0%|          | 0/39280 [00:00<?, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "2c2af2b0ef594cf19f8ca97fab5776d1",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Saving the dataset (0/1 shards):   0%|          | 0/3928 [00:00<?, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "✅ 신규 valid 저장 완료: ./02_prep_datasets/valid_doc_dataset_additional (3,928 rows)\n"
+     ]
+    }
+   ],
+   "source": [
+    "import os\n",
+    "import pickle5 as pickle\n",
+    "import pandas as pd\n",
+    "import numpy as np\n",
+    "from datasets import load_from_disk, Dataset, concatenate_datasets\n",
+    "from collections import defaultdict\n",
+    "from tqdm import tqdm\n",
+    "from pprint import pprint\n",
+    "\n",
+    "# =========================================================\n",
+    "# 0️⃣ 유틸리티\n",
+    "# =========================================================\n",
+    "def load_pickle5(filename):\n",
+    "    with open(filename, 'rb') as f:\n",
+    "        return pickle.load(f)\n",
+    "\n",
+    "def save_pickle5(data, filename):\n",
+    "    with open(filename, 'wb') as f:\n",
+    "        pickle.dump(data, f, protocol=pickle.HIGHEST_PROTOCOL)\n",
+    "\n",
+    "# =========================================================\n",
+    "# 1️⃣ 데이터셋 전처리 및 병합\n",
+    "# =========================================================\n",
+    "def preprocess_dataset(dataset_paths: dict, save_path: str):\n",
+    "    pprint(dataset_paths)\n",
+    "    ds_list = [Dataset.from_json(dataset_paths[f]) for f in tqdm(dataset_paths, desc=\"데이터셋 로드 중\")]\n",
+    "    merged_ds = concatenate_datasets(ds_list)\n",
+    "    merged_ds.to_parquet(save_path)\n",
+    "    print(f\"✅ 병합 완료: {save_path} ({len(merged_ds):,} rows)\")\n",
+    "    return merged_ds\n",
+    "\n",
+    "# =========================================================\n",
+    "# 2️⃣ 섹션 정보 매핑\n",
+    "# =========================================================\n",
+    "def build_section_dict(bib_data_path, save_path='./02_prep_datasets/section_dict.p'):\n",
+    "    try:\n",
+    "        section_dict = load_pickle5(save_path)\n",
+    "    except:\n",
+    "        bib_data = load_pickle5(bib_data_path)\n",
+    "        section_dict = {s: [] for s in ['A','B','C','D','E','F','G','H','Y','Unknown']}\n",
+    "    \n",
+    "        for q, v in tqdm(bib_data.items(), desc=\"섹션 매핑 중\"):\n",
+    "            tmp_section = v['CPC'][0][0] if len(v['CPC']) > 0 else 'Unknown'\n",
+    "            section_dict[tmp_section].append(q)\n",
+    "    \n",
+    "        save_pickle5(section_dict, save_path)\n",
+    "        print(\"✅ section_dict 저장 완료\")\n",
+    "    return section_dict\n",
+    "\n",
+    "# =========================================================\n",
+    "# 3️⃣ 데이터 필터링\n",
+    "# =========================================================\n",
+    "def filter_dataset_by_section(dataset, filtered_set, section_dict, num_proc=16):\n",
+    "    applno_to_section = {applno: sec for sec, applnos in section_dict.items() for applno in applnos}\n",
+    "    filtered_ds = dataset.filter(lambda x: x['APPLNO'] in filtered_set, num_proc=num_proc)\n",
+    "    filtered_ds = filtered_ds.filter(\n",
+    "        lambda x: applno_to_section.get(x['APPLNO']) == applno_to_section.get(x['REF_APPLNO']),\n",
+    "        num_proc=num_proc\n",
+    "    )\n",
+    "    return filtered_ds\n",
+    "\n",
+    "# =========================================================\n",
+    "# 4️⃣ text_dataset → applno2text 매핑\n",
+    "# =========================================================\n",
+    "def build_applno2text(text_dataset_paths, applno_set, save_path='./02_prep_datasets/new_dataset'):\n",
+    "    filtered_datasets = []\n",
+    "    for path in tqdm(text_dataset_paths, desc=\"텍스트 데이터 로드 중\"):\n",
+    "        ds = load_from_disk(path)\n",
+    "        filtered_ds = ds.filter(lambda x: x['applno_field'].split('_')[0] in applno_set, num_proc=16)\n",
+    "        filtered_datasets.append(filtered_ds)\n",
+    "    \n",
+    "    combined_dataset = concatenate_datasets(filtered_datasets)\n",
+    "    combined_dataset.save_to_disk('./02_prep_datasets/text_dataset')\n",
+    "\n",
+    "    def split_applno(example):\n",
+    "        applno, field = example['applno_field'].split('_', 1)\n",
+    "        example['applno'] = applno\n",
+    "        example['field'] = field\n",
+    "        return example\n",
+    "\n",
+    "    combined_dataset = combined_dataset.map(split_applno, num_proc=32)\n",
+    "\n",
+    "    grouped = defaultdict(list)\n",
+    "    for ex in tqdm(combined_dataset, desc=\"그룹화 중\"):\n",
+    "        grouped[ex['applno']].append(ex['vector'])\n",
+    "    \n",
+    "    grouped_list = [{'applno': k, 'text_list': v} for k, v in grouped.items()]\n",
+    "    new_dataset = Dataset.from_list(grouped_list)\n",
+    "    new_dataset.save_to_disk(save_path)\n",
+    "    \n",
+    "    applno2text = {ex['applno']: ex['text_list'] for ex in tqdm(new_dataset, desc=\"applno2text 생성 중\")}\n",
+    "    return applno2text\n",
+    "\n",
+    "# =========================================================\n",
+    "# 5️⃣ anchor-positive dataset 생성\n",
+    "# =========================================================\n",
+    "def build_anchor_positive_dataset(df_pairs, applno2text, save_path='./02_prep_datasets/anchor_positive_dataset'):\n",
+    "    pairs = []\n",
+    "    for _, row in tqdm(df_pairs.iterrows(), total=len(df_pairs), desc=\"anchor-positive 생성\"):\n",
+    "        q, a = str(row['APPLNO']), str(row['REF_APPLNO'])\n",
+    "        if str(q) not in applno2text or str(a) not in applno2text:\n",
+    "            continue\n",
+    "        pairs.append({\n",
+    "            'query_applno': q,\n",
+    "            'answer_applno': a,\n",
+    "            'query_text_list': applno2text[q],\n",
+    "            'answer_text_list': applno2text[a]\n",
+    "        })\n",
+    "    dataset = Dataset.from_list(pairs)\n",
+    "    dataset.save_to_disk(save_path)\n",
+    "    print(f\"✅ anchor_positive_dataset 저장 ({len(dataset)})\")\n",
+    "    return dataset\n",
+    "\n",
+    "# =========================================================\n",
+    "# 6️⃣ Train / Valid Split\n",
+    "# =========================================================\n",
+    "def split_train_valid(anchor_positive_dataset, train_path, valid_path, split_ratio=0.9):\n",
+    "    try:\n",
+    "        train_dataset = load_from_disk(train_path)\n",
+    "        valid_dataset = load_from_disk(valid_path)\n",
+    "    except:\n",
+    "        unique_applnos = list(set(anchor_positive_dataset['query_applno']))\n",
+    "        np.random.seed(42)\n",
+    "        np.random.shuffle(unique_applnos)\n",
+    "        split_idx = int(len(unique_applnos) * split_ratio)\n",
+    "        train_applnos = set(unique_applnos[:split_idx])\n",
+    "        valid_applnos = set(unique_applnos[split_idx:])\n",
+    "        train_dataset = anchor_positive_dataset.filter(lambda x: x['query_applno'] in train_applnos)\n",
+    "        valid_dataset = anchor_positive_dataset.filter(lambda x: x['query_applno'] in valid_applnos)\n",
+    "        train_dataset.save_to_disk(train_path)\n",
+    "        valid_dataset.save_to_disk(valid_path)\n",
+    "    print(f\"✅ Train: {len(train_dataset)}, Valid: {len(valid_dataset)}\")\n",
+    "    return train_dataset, valid_dataset\n",
+    "\n",
+    "# =========================================================\n",
+    "# ⭐ 추가된 부분: 신규 데이터만 분리\n",
+    "# =========================================================\n",
+    "def split_new_data_only(anchor_positive_dataset, existing_valid_path, new_valid_path, split_ratio=0.9):\n",
+    "    \"\"\"\n",
+    "    기존 valid는 유지하고, anchor_positive_dataset 중 신규 데이터만 따로 split하여 새로운 valid를 생성\n",
+    "    \"\"\"\n",
+    "    print(f\"📂 기존 valid 로드: {existing_valid_path}\")\n",
+    "    existing_valid = load_from_disk(existing_valid_path)\n",
+    "    existing_applnos = set(existing_valid['query_applno'])\n",
+    "    \n",
+    "    print(f\"🔍 기존 valid에 없는 신규 데이터만 추출 중...\")\n",
+    "    new_dataset = anchor_positive_dataset.filter(lambda x: x['query_applno'] not in existing_applnos)\n",
+    "    print(f\"✅ 신규 데이터 개수: {len(new_dataset)}\")\n",
+    "\n",
+    "    if len(new_dataset) == 0:\n",
+    "        print(\"⚠️ 신규 데이터가 없습니다. 기존 valid만 유지합니다.\")\n",
+    "        return None, None\n",
+    "\n",
+    "    unique_applnos = list(set(new_dataset['query_applno']))\n",
+    "    np.random.seed(42)\n",
+    "    np.random.shuffle(unique_applnos)\n",
+    "    split_idx = int(len(unique_applnos) * split_ratio)\n",
+    "    train_applnos = set(unique_applnos[:split_idx])\n",
+    "    valid_applnos = set(unique_applnos[split_idx:])\n",
+    "\n",
+    "    new_train = new_dataset.filter(lambda x: x['query_applno'] in train_applnos)\n",
+    "    new_valid = new_dataset.filter(lambda x: x['query_applno'] in valid_applnos)\n",
+    "\n",
+    "    new_valid.save_to_disk(new_valid_path)\n",
+    "    print(f\"✅ 신규 valid 저장 완료: {new_valid_path} ({len(new_valid):,} rows)\")\n",
+    "    return new_train, new_valid\n",
+    "\n",
+    "\n",
+    "# =========================================================\n",
+    "# 7️⃣ 전체 실행\n",
+    "# =========================================================\n",
+    "if __name__ == \"__main__\":\n",
+    "\n",
+    "    # 신규 포함 데이터셋 경로 정의\n",
+    "    dataset_path = {\n",
+    "        '자동구축데이터셋': {f'{i}차수': f'01_org_datasets/자동구축데이터셋_{i}차수_전달용.json' for i in range(1,9)},  # ✅ 7차 추가\n",
+    "        '수작업데이터셋': {f'{i}차수': f'01_org_datasets/수작업구축데이터_{i}차수_전달용.json' for i in range(1,6)},  # ✅ 5차 추가\n",
+    "    }\n",
+    "\n",
+    "    # 1️⃣ 통합 전처리\n",
+    "    자동_ds = preprocess_dataset(dataset_path['자동구축데이터셋'], './02_prep_datasets/자동구축데이터셋_전처리완료')\n",
+    "    수작업_ds = preprocess_dataset(dataset_path['수작업데이터셋'], './02_prep_datasets/수작업데이터셋_전처리완료')\n",
+    "\n",
+    "    # 2️⃣ 섹션 정보\n",
+    "    section_dict = build_section_dict('/nasdata/data/text/02_kiprisplus_rawdata/08_KIPO_OPN_BackTo202412/ko_data_info_ver202412_ver2.p')\n",
+    "\n",
+    "    # 3️⃣ 필터링\n",
+    "    print('필터링할 데이터 선정')\n",
+    "    unique_applnos = set(자동_ds.unique('APPLNO')) | set(수작업_ds.unique('APPLNO'))  \n",
+    "    interesed_section = []\n",
+    "    for s in ['C','H','E','F','G','A','B','D']:\n",
+    "        interesed_section.extend(section_dict[s])\n",
+    "    interesed_section_set = set(interesed_section)\n",
+    "    \n",
+    "    test_dataset = load_pickle5('/nasdata/workspace/2025/14_PatentSearch_2025/data/01_eval_data/01_eval_section_booster_113219.p')\n",
+    "    test_keys_set = set([v[0] for v in test_dataset.values()])\n",
+    "\n",
+    "    \n",
+    "    filtered_applnos = [applno for applno in tqdm(unique_applnos) if applno in interesed_section_set and applno not in test_keys_set]\n",
+    "\n",
+    "    print('필터링 시작')\n",
+    "    filtered_자동 = filter_dataset_by_section(자동_ds, set(filtered_applnos), section_dict)\n",
+    "    filtered_수작업 = filter_dataset_by_section(수작업_ds, set(filtered_applnos), section_dict)\n",
+    "    print('필터링 끝')\n",
+    "\n",
+    "    # 4️⃣ df 병합\n",
+    "    print('df 병합 시작')\n",
+    "    df_자동 = filtered_자동.to_pandas()\n",
+    "    df_수작업 = filtered_수작업.to_pandas()\n",
+    "    df_pairs = pd.concat([df_자동, df_수작업], ignore_index=True)[['APPLNO','REF_APPLNO']].drop_duplicates()\n",
+    "    df_pairs.to_csv('./02_prep_datasets/pair_df.csv', index=False)\n",
+    "    print('df 저장 완료')\n",
+    "\n",
+    "    # 5️⃣ text_dataset → applno2text 생성\n",
+    "    text_dataset_paths = [\n",
+    "        '/nasdata/workspace/2025/14_PatentSearch_2025/kmh/01_model_all_doc_test_540/01_data_pre_proc/pre_data_field5_divide4_arrow/pubdata_202412_5field_input_512_div4_text1/',\n",
+    "        '/nasdata/workspace/2025/14_PatentSearch_2025/kmh/01_model_all_doc_test_540/01_data_pre_proc/pre_data_field5_divide4_arrow/pubdata_202412_5field_input_512_div4_text2/',\n",
+    "        '/nasdata/workspace/2025/14_PatentSearch_2025/kmh/01_model_all_doc_test_540/01_data_pre_proc/pre_data_field5_divide4_arrow/pubdata_202412_5field_input_512_div4_text3/',\n",
+    "        '/nasdata/workspace/2025/14_PatentSearch_2025/kmh/01_model_all_doc_test_540/01_data_pre_proc/pre_data_field5_divide4_arrow/pubdata_202412_5field_input_512_div4_text4/',\n",
+    "    \n",
+    "    ]\n",
+    "    print('applno2text')\n",
+    "    applno2text = build_applno2text(text_dataset_paths, set(list(df_pairs['APPLNO']) + list(df_pairs['REF_APPLNO'])))\n",
+    "    \n",
+    "    anchor_positive_dataset = build_anchor_positive_dataset(df_pairs, applno2text)\n",
+    "    # 기존 valid 유지 + 신규 데이터만 분리\n",
+    "    existing_valid_path = '/nasdata/workspace/2025/14_PatentSearch_2025/yhj/251015_valid_변경실험/02_prep_datasets/valid_doc_dataset'\n",
+    "    new_valid_path = './02_prep_datasets/valid_doc_dataset_additional'\n",
+    "\n",
+    "    new_train, new_valid = split_new_data_only(\n",
+    "        anchor_positive_dataset,\n",
+    "        existing_valid_path=existing_valid_path,\n",
+    "        new_valid_path=new_valid_path,\n",
+    "        split_ratio=0.9\n",
+    "    )\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 72,
+   "id": "9b87a227-1c14-430a-bfd4-99f48b727f79",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "텍스트 데이터 로드 중:   0%|          | 0/4 [00:00<?, ?it/s]"
+     ]
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "12db9e0a30834572ab75db35b0c58152",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Loading dataset from disk:   0%|          | 0/23 [00:00<?, ?it/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "27b25e25b84a4c0a85128376fa581626",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Filter (num_proc=16):   0%|          | 0/5700333 [00:00<?, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "텍스트 데이터 로드 중:  25%|██▌       | 1/4 [00:36<01:48, 36.16s/it]"
+     ]
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "cd04816cd0b2471a9724066c53c8be86",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Loading dataset from disk:   0%|          | 0/23 [00:00<?, ?it/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "c59b3b5f0b634d83ba7bdf93fe6e8f7c",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Filter (num_proc=16):   0%|          | 0/5700333 [00:00<?, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "텍스트 데이터 로드 중:  50%|█████     | 2/4 [01:04<01:02, 31.45s/it]"
+     ]
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "0d7356e12cf14fd0b382c9fac2125df5",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Loading dataset from disk:   0%|          | 0/23 [00:00<?, ?it/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "895c0ac505724755b027ebf281a99201",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Filter (num_proc=16):   0%|          | 0/5700333 [00:00<?, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "텍스트 데이터 로드 중:  75%|███████▌  | 3/4 [01:31<00:29, 29.58s/it]"
+     ]
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "a557cae3d78c4c5391fde0fea44e98d9",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Loading dataset from disk:   0%|          | 0/23 [00:00<?, ?it/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "d41e48924923434aabdeafb7848b8741",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Filter (num_proc=16):   0%|          | 0/5700331 [00:00<?, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "텍스트 데이터 로드 중: 100%|██████████| 4/4 [02:01<00:00, 30.42s/it]\n"
+     ]
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "d677e1cc52f4402093805085359504c8",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Saving the dataset (0/9 shards):   0%|          | 0/2296104 [00:00<?, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "5eb32c8b6a6545b4a7e0488c973c283e",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Map (num_proc=32):   0%|          | 0/2296104 [00:00<?, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "그룹화 중: 100%|██████████| 2296104/2296104 [01:32<00:00, 24768.94it/s]\n"
+     ]
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "b77e7a2bce1747c3919b9fdd7f3fe427",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Saving the dataset (0/9 shards):   0%|          | 0/477592 [00:00<?, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "applno2text 생성 중: 100%|██████████| 477592/477592 [00:25<00:00, 18944.26it/s]\n",
+      "anchor-positive 생성: 100%|██████████| 276917/276917 [00:08<00:00, 30875.97it/s]\n"
+     ]
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "c48bbc184727453099c9d85ec3b92fc5",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Saving the dataset (0/11 shards):   0%|          | 0/276917 [00:00<?, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "✅ anchor_positive_dataset 저장 (276917)\n",
+      "✅ anchor_positive_dataset 데이터 개수: 276917\n",
+      "📂 기존 valid 로드: /nasdata/workspace/2025/14_PatentSearch_2025/yhj/251015_valid_변경실험/02_prep_datasets/valid_doc_dataset\n",
+      "🔍 기존 valid에 없는 신규 데이터만 추출 중...\n"
+     ]
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "f308c6ff91b843ad96db2ac88d88868b",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Filter:   0%|          | 0/276917 [00:00<?, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "✅ 신규 데이터 개수: 264629\n"
+     ]
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "e43b05adc1fc4cc695940d52ca5259a5",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Filter:   0%|          | 0/264629 [00:00<?, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "fcb57918863d419582b73eebe4aa43f0",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Filter:   0%|          | 0/264629 [00:00<?, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "2c9e70670765439aa19971b3d2bfd37c",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Saving the dataset (0/1 shards):   0%|          | 0/26458 [00:00<?, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "✅ 신규 valid 저장 완료: ./02_prep_datasets/valid_doc_dataset_additional (26,458 rows)\n"
+     ]
+    }
+   ],
+   "source": [
+    "applno2text = build_applno2text(text_dataset_paths, set(list(df_pairs['APPLNO']) + list(df_pairs['REF_APPLNO'])))\n",
+    "\n",
+    "anchor_positive_dataset = build_anchor_positive_dataset(df_pairs, applno2text)\n",
+    "# 기존 valid 유지 + 신규 데이터만 분리\n",
+    "existing_valid_path = '/nasdata/workspace/2025/14_PatentSearch_2025/yhj/251015_valid_변경실험/02_prep_datasets/valid_doc_dataset'\n",
+    "new_valid_path = './02_prep_datasets/valid_doc_dataset_additional'\n",
+    "\n",
+    "new_train, new_valid = split_new_data_only(\n",
+    "    anchor_positive_dataset,\n",
+    "    existing_valid_path=existing_valid_path,\n",
+    "    new_valid_path=new_valid_path,\n",
+    "    split_ratio=0.9\n",
+    ")\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 91,
+   "id": "03eeaba7-3521-4381-9ccf-9c1d8decc939",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "f909a73497d840849bbdb05c37cf5f94",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Saving the dataset (0/10 shards):   0%|          | 0/252775 [00:00<?, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "✅ 신규 train 저장 완료: ./02_prep_datasets/valid_doc_dataset_additional (252,775 rows)\n"
+     ]
+    }
+   ],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "381f3abc-a099-4010-9d5a-57bbc49a36a8",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 100,
+   "id": "2a4d08ed-be58-4bb0-89dd-35c59c3f7f9a",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "✅ anchor_positive_dataset 데이터 개수: 276917\n",
+      "📂 기존 valid 로드: /nasdata/workspace/2025/14_PatentSearch_2025/yhj/251015_valid_변경실험/02_prep_datasets/valid_doc_dataset\n",
+      "🔍 기존 valid에 없는 신규 데이터만 추출 중...\n",
+      "276917\n"
+     ]
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "e67723f9ec3c4b2d82b23f8d7956b859",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Filter:   0%|          | 0/276917 [00:00<?, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "264629\n",
+      "✅ 신규 데이터 개수: 264629\n"
+     ]
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "e228608136de497b88208d4b999109e3",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Filter:   0%|          | 0/264629 [00:00<?, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "28af9b45d1274ec98a1aac01d421ec8a",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Filter:   0%|          | 0/264629 [00:00<?, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "e275aba478cc4194839b0d175e674d36",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Saving the dataset (0/10 shards):   0%|          | 0/252775 [00:00<?, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "✅ 신규 train 저장 완료: ./02_prep_datasets/train_doc_dataset_additional (252,775 rows)\n"
+     ]
+    },
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "f88809d977194e36a314331439eab1e6",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "Saving the dataset (0/1 shards):   0%|          | 0/24234 [00:00<?, ? examples/s]"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "✅ 신규 valid 저장 완료: ./02_prep_datasets/valid_doc_dataset_additional (24,234 rows)\n"
+     ]
+    }
+   ],
+   "source": [
+    "def split_new_data_only(anchor_positive_dataset, existing_valid_path, new_valid_path, split_ratio=0.9):\n",
+    "    \"\"\"\n",
+    "    기존 valid는 유지하고, anchor_positive_dataset 중 신규 데이터만 따로 split하여 새로운 valid를 생성\n",
+    "    \"\"\"\n",
+    "\n",
+    "    print(f\"✅ anchor_positive_dataset 데이터 개수: {len(anchor_positive_dataset)}\")\n",
+    "    \n",
+    "    print(f\"📂 기존 valid 로드: {existing_valid_path}\")\n",
+    "    \n",
+    "    existing_valid = load_from_disk(existing_valid_path)\n",
+    "    existing_applnos = set(existing_valid['query_applno'])\n",
+    "    \n",
+    "    print(f\"🔍 기존 valid에 없는 신규 데이터만 추출 중...\")\n",
+    "    print(len(anchor_positive_dataset))\n",
+    "    new_dataset = anchor_positive_dataset.filter(lambda x: x['query_applno'] not in existing_applnos)\n",
+    "    print(len(new_dataset))\n",
+    "    print(f\"✅ 신규 데이터 개수: {len(new_dataset)}\")\n",
+    "\n",
+    "    if len(new_dataset) == 0:\n",
+    "        print(\"⚠️ 신규 데이터가 없습니다. 기존 valid만 유지합니다.\")\n",
+    "        return None, None\n",
+    "\n",
+    "    unique_applnos = list(set(new_dataset['query_applno']))\n",
+    "    np.random.seed(42)\n",
+    "    np.random.shuffle(unique_applnos)\n",
+    "    split_idx = int(len(anchor_positive_dataset) * split_ratio)\n",
+    "    train_applnos = set(unique_applnos[:split_idx])\n",
+    "    valid_applnos = set(unique_applnos[split_idx:])\n",
+    "\n",
+    "    new_train = new_dataset.filter(lambda x: x['query_applno'] in train_applnos)\n",
+    "    new_valid = new_dataset.filter(lambda x: x['query_applno'] in valid_applnos)\n",
+    "\n",
+    "    new_valid = concatenate_datasets([new_valid, existing_valid])\n",
+    "\n",
+    "    # new_train.save_to_disk(new_valid_path)\n",
+    "    # print(f\"✅ 신규 train 저장 완료: {new_valid_path} ({len(new_train):,} rows)\")\n",
+    "\n",
+    "    new_train_path = './02_prep_datasets/train_doc_dataset_additional'\n",
+    "\n",
+    "    new_train.save_to_disk(new_train_path)\n",
+    "    print(f\"✅ 신규 train 저장 완료: {new_train_path} ({len(new_train):,} rows)\")\n",
+    "    \n",
+    "    new_valid.save_to_disk(new_valid_path)\n",
+    "    print(f\"✅ 신규 valid 저장 완료: {new_valid_path} ({len(new_valid):,} rows)\")\n",
+    "    return new_train, new_valid\n",
+    "\n",
+    "new_train, new_valid = split_new_data_only(\n",
+    "        anchor_positive_dataset,\n",
+    "        existing_valid_path=existing_valid_path,\n",
+    "        new_valid_path=new_valid_path,\n",
+    "        split_ratio=0.9\n",
+    "    )"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 101,
+   "id": "f57e74fa-ace2-4f57-a92d-ec4d8169aadd",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from datasets import load_from_disk"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 102,
+   "id": "36c73f38-ace6-4e1f-a2f2-b3ef01621b7c",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Dataset({\n",
+       "    features: ['query_applno', 'answer_applno', 'query_text_list', 'answer_text_list'],\n",
+       "    num_rows: 24234\n",
+       "})"
+      ]
+     },
+     "execution_count": 102,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "ds1 = load_from_disk('./02_prep_datasets/valid_doc_dataset_additional/')\n",
+    "ds1"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 103,
+   "id": "f1e087d8-d841-4631-8c31-9d96692ab707",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Dataset({\n",
+       "    features: ['query_applno', 'answer_applno', 'query_text_list', 'answer_text_list'],\n",
+       "    num_rows: 12380\n",
+       "})"
+      ]
+     },
+     "execution_count": 103,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "ds2 = load_from_disk('/nasdata/workspace/2025/14_PatentSearch_2025/yhj/251015_valid_변경실험/02_prep_datasets/valid_doc_dataset')\n",
+    "ds2"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 104,
+   "id": "8a936b9f-946f-4dae-ba4a-235304461308",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "ds1: 23,835, ds2: 12,158\n",
+      "ds2가 ds1에 완전히 포함됨? ➡️ True\n",
+      "ds2에만 있는 applno 수: 0\n"
+     ]
+    }
+   ],
+   "source": [
+    "# query_applno 기준 비교\n",
+    "set1 = set(ds1['query_applno'])\n",
+    "set2 = set(ds2['query_applno'])\n",
+    "\n",
+    "print(f\"ds1: {len(set1):,}, ds2: {len(set2):,}\")\n",
+    "print(f\"ds2가 ds1에 완전히 포함됨? ➡️ {set2.issubset(set1)}\")\n",
+    "print(f\"ds2에만 있는 applno 수: {len(set2 - set1)}\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 105,
+   "id": "cad33693-9acc-42d1-a584-b79d964bd111",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Dataset({\n",
+       "    features: ['query_applno', 'answer_applno', 'query_text_list', 'answer_text_list'],\n",
+       "    num_rows: 252775\n",
+       "})"
+      ]
+     },
+     "execution_count": 105,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "ds3 = load_from_disk('./02_prep_datasets/train_doc_dataset_additional')\n",
+    "ds3"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 106,
+   "id": "560a2337-7eb1-46d4-be7d-5c01eb9047ad",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Dataset({\n",
+       "    features: ['query_applno', 'answer_applno', 'query_text_list', 'answer_text_list'],\n",
+       "    num_rows: 252775\n",
+       "})"
+      ]
+     },
+     "execution_count": 106,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "new_train"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "d751a2ac-3bec-4f05-ab12-a00bc85ac235",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "py310_yjeon",
+   "language": "python",
+   "name": "py310_yjeon"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.10.18"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
