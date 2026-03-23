@@ -21,8 +21,6 @@ model_name = "gpt-5.4"
 
 # ── 디렉토리 트리 ──────────────────────────────────────────────────────────────
 
-VIEWABLE_EXTS: set[str] = {".md", ".csv", ".txt", ".py", ".ipynb"}
-
 
 def _find_server_dir() -> pathlib.Path:
     """'Server' 폴더를 CWD → 스크립트 위치 순으로 탐색."""
@@ -37,10 +35,8 @@ def _find_server_dir() -> pathlib.Path:
 
 
 def build_tree(path: pathlib.Path) -> dict | None:
-    """트리 dict. 파일 노드: name(파일명), path(절대경로), type='file'."""
+    """트리 dict. 모든 파일·폴더 포함. 파일 노드: name, path, type='file'."""
     if path.is_file():
-        if path.suffix.lower() not in VIEWABLE_EXTS:
-            return None
         return {
             "type": "file",
             "name": path.name,
@@ -65,9 +61,14 @@ def build_tree(path: pathlib.Path) -> dict | None:
 
 
 def _file_icon(filename: str) -> str:
+    ext = pathlib.Path(filename).suffix.lower()
     return {
         ".md": "📝", ".csv": "📊", ".txt": "📄", ".py": "🐍", ".ipynb": "📓",
-    }.get(pathlib.Path(filename).suffix.lower(), "📄")
+        ".json": "📋", ".yaml": "📋", ".yml": "📋",
+        ".html": "🌐", ".css": "🎨", ".js": "🟨", ".ts": "🔷",
+        ".png": "🖼️", ".jpg": "🖼️", ".jpeg": "🖼️", ".gif": "🖼️", ".svg": "🖼️",
+        ".pdf": "📕", ".zip": "📦", ".xml": "📋",
+    }.get(ext, "📄")
 
 
 def tree_to_html(node: dict, depth: int = 0) -> str:
@@ -102,11 +103,12 @@ def tree_to_html(node: dict, depth: int = 0) -> str:
 def build_qa_system_prompt(base_dir: pathlib.Path, tree_dict: dict | None) -> str:
     """OpenAPI 질의응답용 시스템 프롬프트. 디렉터리 트리(JSON)를 근거로 답하도록 지시."""
     tree_json = json.dumps(tree_dict, ensure_ascii=False, indent=2) if tree_dict else "{}"
-    exts = ", ".join(sorted(VIEWABLE_EXTS))
     return f"""당신은 아래에 주어진 **디렉터리 트리 정보**만을 근거로 사용자의 질문에 답하는 도우미입니다.
 
 ## 기준 루트 경로
 `{base_dir}`
+
+이 트리에는 기준 경로 아래에서 읽을 수 있는 **모든 파일과 폴더**가 포함됩니다(확장자 제한 없음).
 
 ## 디렉터리 트리 (JSON)
 각 노드의 의미:
