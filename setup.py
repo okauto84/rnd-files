@@ -158,8 +158,16 @@ if _raw and "|" in _raw:
         st.query_params["sx"] = _safe.suffix.lower()
     st.session_state["tree_file_input"] = ""
 
+# 주의: div:has(input...) 만 쓰면 .block-container 등 조상까지 매칭되어 화면 전체가 사라짐.
+# Streamlit 텍스트 입력 위젯 루트만 숨김.
 st.markdown(
-    "<style>div:has(input[placeholder='__tree_file__']){display:none!important}</style>",
+    """
+<style>
+  div[data-testid="stTextInput"]:has(input[placeholder="__tree_file__"]) {
+    display: none !important;
+  }
+</style>
+""",
     unsafe_allow_html=True,
 )
 
