@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import streamlit as st
-from openai import OpenAI
 import time
 
 # 페이지 설정
