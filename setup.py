@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import json
 import html as _html
 import time
 import pathlib
@@ -98,6 +99,34 @@ def tree_to_html(node: dict, depth: int = 0) -> str:
     )
 
 
+def build_qa_system_prompt(base_dir: pathlib.Path, tree_dict: dict | None) -> str:
+    """OpenAPI 질의응답용 시스템 프롬프트. 디렉터리 트리(JSON)를 근거로 답하도록 지시."""
+    tree_json = json.dumps(tree_dict, ensure_ascii=False, indent=2) if tree_dict else "{}"
+    exts = ", ".join(sorted(VIEWABLE_EXTS))
+    return f"""당신은 아래에 주어진 **디렉터리 트리 정보**만을 근거로 사용자의 질문에 답하는 도우미입니다.
+
+## 기준 루트 경로
+`{base_dir}`
+
+## 디렉터리 트리 (JSON)
+각 노드의 의미:
+- `type`: `"dir"` 이면 폴더, `"file"` 이면 파일
+- `name`: 표시 이름(파일명 또는 폴더명)
+- `path`: 절대 경로
+- `children`: 폴더일 때만, 하위 노드 배열
+
+```json
+{tree_json}
+```
+
+## 답변 규칙
+1. 질문에 답할 때 **위 JSON에 실제로 존재하는 폴더·파일·경로**만 인용하세요.
+2. 구조 요약, 특정 확장자 목록, 경로 찾기, 상대 위치, 폴더별 파일 개수 등은 트리를 직접 근거로 설명하세요.
+3. 트리가 비어 있거나 질문과 무관하면, 그 사실을 짧게 밝히고 일반적인 안내만 하세요.
+4. **한국어**로 답변하세요.
+"""
+
+
 # ── 앱 본문 ────────────────────────────────────────────────────────────────────
 
 BASE_DIR = _find_server_dir()
@@ -171,7 +200,8 @@ def call_openai_api(messages: list) -> str:
         if not API_KEY:
             return "⚠️ API 키가 설정되지 않았습니다. Streamlit secrets의 openai_api_key를 설정해주세요."
         client = OpenAI(api_key=API_KEY)
-        return client.chat.completions.create(model=model_name, messages=messages).choices[0].message.content
+        resp = client.chat.completions.create(model=model_name, messages=messages)
+        return (resp.choices[0].message.content or "").strip()
     except Exception as e:
         err = str(e)
         if "authentication" in err.lower() or "invalid" in err.lower():
@@ -191,7 +221,11 @@ if prompt := st.chat_input("질문해보세요!"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        messages_for_api = [{"role": m["role"], "content": m["content"]} for m in st.session_state.messages]
+        system_prompt = build_qa_system_prompt(BASE_DIR, tree_data)
+        messages_for_api = [
+            {"role": "system", "content": system_prompt},
+            *[{"role": m["role"], "content": m["content"]} for m in st.session_state.messages],
+        ]
         with st.spinner("생성AI가 답변을 생성하고 있습니다..."):
             response = call_openai_api(messages_for_api)
         placeholder = st.empty()
