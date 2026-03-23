@@ -179,10 +179,23 @@ st.caption(
 tree_data = build_tree(BASE_DIR)
 _tree_html = tree_to_html(tree_data) if tree_data else "<p>표시할 파일이 없습니다.</p>"
 
-# iframe(components.html) 고정 높이 대신 메인 문서에 렌더 → 접힌 만큼만 높이 사용, 펼치면 자동 증가
-st.markdown(
-    """
+# 스타일은 짧은 마크다운으로만 주입. 트리 본문은 st.html로 넣어(가능 시) 마크다운 파서가 긴 HTML을 끊지 않게 함.
+# Streamlit 세로 flex(min-height:0 등) 때문에 패널 배경만 잘리는 경우 → :has(.tree-panel-wrap) 상위에 overflow/높이 완화.
+_TREE_PANEL_STYLES = """
 <style>
+  [data-testid="stVerticalBlockBorderWrapper"]:has(.tree-panel-wrap),
+  [data-testid="stVerticalBlock"]:has(.tree-panel-wrap),
+  [data-testid="stElementContainer"]:has(.tree-panel-wrap),
+  [data-testid="stMarkdownContainer"]:has(.tree-panel-wrap),
+  [data-testid="stHtmlContainer"]:has(.tree-panel-wrap) {
+    overflow: visible !important;
+    max-height: none !important;
+    height: auto !important;
+  }
+  [data-testid="stVerticalBlock"] > [data-testid="stElementContainer"]:has(.tree-panel-wrap) {
+    flex: 0 0 auto !important;
+    min-height: fit-content !important;
+  }
   .tree-panel-wrap {
     font-family: monospace;
     background: #f8f9fa;
@@ -190,7 +203,11 @@ st.markdown(
     border-radius: 8px;
     padding: 12px;
     width: 100%;
+    max-width: 100%;
     box-sizing: border-box;
+    display: flow-root;
+    overflow: visible;
+    min-height: min-content;
   }
   .tree-panel-wrap .tree-toggle::before {
     content: "+";
@@ -222,12 +239,15 @@ st.markdown(
   }
   .tree-panel-wrap details > summary:hover { background: #f1f3f5; }
 </style>
-<div class="tree-panel-wrap">
 """
-    + _tree_html
-    + "</div>",
-    unsafe_allow_html=True,
-)
+
+st.markdown(_TREE_PANEL_STYLES, unsafe_allow_html=True)
+
+_tree_panel_body = f'<div class="tree-panel-wrap">{_tree_html}</div>'
+if hasattr(st, "html"):
+    st.html(_tree_panel_body)
+else:
+    st.markdown(_tree_panel_body, unsafe_allow_html=True)
 
 st.markdown("---")
 
