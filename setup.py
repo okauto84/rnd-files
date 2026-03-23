@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import json
 import html as _html
 import time
 import pathlib
@@ -27,35 +28,74 @@ model_name = "gpt-5.4"
 
 # ── 디렉토리 트리 ──────────────────────────────────────────────────────────────
 
-def build_tree(path: pathlib.Path) -> dict:
-    """경로를 재귀적으로 읽어 트리 구조 dict 반환."""
-    node = {
+# 트리에 표시하고 클릭으로 열 수 있는 확장자
+VIEWABLE_EXTS: set[str] = {".md", ".csv", ".txt", ".py", ".ipynb"}
+
+
+def _find_server_dir() -> pathlib.Path:
+    """'Server' 폴더를 CWD → 스크립트 위치 순으로 탐색해 반환.
+    1) 해당 디렉토리 직하의 'Server' 하위 폴더
+    2) 경로 중 'Server' 세그먼트가 있으면 그 지점
+    3) 없으면 CWD 사용
+    """
+    candidates = [
+        pathlib.Path(os.getcwd()),
+        pathlib.Path(os.path.abspath(__file__)).parent,
+    ]
+    for base in candidates:
+        # 직접 하위에 'Server' 폴더가 있는지 확인
+        sub = base / "Server"
+        if sub.is_dir():
+            return sub
+        # 경로 세그먼트 중 'Server' 찾기 (대소문자 구분 없이)
+        parts = base.parts
+        for i, part in enumerate(parts):
+            if part.lower() == "server":
+                return pathlib.Path(*parts[: i + 1])
+    return pathlib.Path(os.getcwd())
+
+
+def build_tree(path: pathlib.Path) -> dict | None:
+    """경로를 재귀적으로 읽어 트리 구조 dict 반환.
+    파일은 VIEWABLE_EXTS에 속하는 것만 포함.
+    허용 파일이 하나도 없는 폴더는 None 반환(루트 제외).
+    """
+    if path.is_file():
+        if path.suffix.lower() not in VIEWABLE_EXTS:
+            return None
+        return {"name": path.name, "type": "file", "path": str(path)}
+
+    # 디렉토리
+    children: list[dict] = []
+    try:
+        entries = sorted(
+            path.iterdir(),
+            key=lambda p: (p.is_file(), p.name.lower())
+        )
+        for child in entries:
+            child_node = build_tree(child)
+            if child_node is not None:
+                children.append(child_node)
+    except PermissionError:
+        pass
+
+    return {
         "name": path.name or str(path),
-        "type": "dir" if path.is_dir() else "file",
+        "type": "dir",
         "path": str(path),
+        "children": children,
     }
-    if path.is_dir():
-        children = []
-        try:
-            entries = sorted(
-                path.iterdir(),
-                key=lambda p: (p.is_file(), p.name.lower())
-            )
-            for child in entries:
-                children.append(build_tree(child))
-        except PermissionError:
-            pass
-        node["children"] = children
-    return node
 
 
 def _file_icon(filename: str) -> str:
     """확장자별 파일 아이콘 반환."""
     ext = pathlib.Path(filename).suffix.lower()
     icons = {
-        ".py": "🐍", ".js": "🟨", ".ts": "🔷", ".tsx": "🔷", ".jsx": "🟨",
+        ".py": "🐍", ".ipynb": "📓",
+        ".md": "📝", ".txt": "📄", ".csv": "📊",
+        ".js": "🟨", ".ts": "🔷", ".tsx": "🔷", ".jsx": "🟨",
         ".html": "🌐", ".css": "🎨", ".json": "📋", ".yaml": "📋", ".yml": "📋",
-        ".md": "📝", ".txt": "📄", ".csv": "📊", ".xlsx": "📊", ".xls": "📊",
+        ".xlsx": "📊", ".xls": "📊",
         ".png": "🖼️", ".jpg": "🖼️", ".jpeg": "🖼️", ".gif": "🖼️", ".svg": "🖼️",
         ".pdf": "📕", ".zip": "📦", ".tar": "📦", ".gz": "📦",
         ".sh": "⚙️", ".bat": "⚙️", ".toml": "⚙️", ".cfg": "⚙️", ".ini": "⚙️",
@@ -101,7 +141,7 @@ def tree_to_html(node: dict, depth: int = 0) -> str:
     name_escaped = _html.escape(node["name"])
     ext = pathlib.Path(node["name"]).suffix.lower()
 
-    if ext in (".md", ".csv"):
+    if ext in VIEWABLE_EXTS:
         # onclick: React 내부 setter로 숨김 input 값 주입 → Enter keydown으로 즉시 rerun
         safe_path = node["path"].replace("\\", "\\\\").replace("'", "\\'")
         js_raw = (
@@ -138,8 +178,8 @@ def tree_to_html(node: dict, depth: int = 0) -> str:
     )
 
 
-# 현재 스크립트 위치를 루트로 사용
-BASE_DIR = pathlib.Path(os.path.abspath(__file__)).parent
+# 'Server' 폴더를 기준 경로로 사용
+BASE_DIR = _find_server_dir()
 
 # ── 세션 상태 초기화 ───────────────────────────────────────────────────────────
 if "messages" not in st.session_state:
@@ -229,19 +269,42 @@ if st.session_state.selected_file:
             st.query_params.clear()
             st.rerun()
 
-    if ext == ".md":
-        try:
+    try:
+        if ext == ".md":
             content = fp.read_text(encoding="utf-8")
             st.markdown(content)
-        except Exception as e:
-            st.error(f"파일을 읽을 수 없습니다: {e}")
 
-    elif ext == ".csv":
-        try:
+        elif ext == ".csv":
             df = pd.read_csv(str(fp))
             st.dataframe(df, use_container_width=True)
-        except Exception as e:
-            st.error(f"파일을 읽을 수 없습니다: {e}")
+
+        elif ext == ".txt":
+            content = fp.read_text(encoding="utf-8")
+            st.text(content)
+
+        elif ext == ".py":
+            content = fp.read_text(encoding="utf-8")
+            st.code(content, language="python")
+
+        elif ext == ".ipynb":
+            nb = json.loads(fp.read_text(encoding="utf-8"))
+            cells = nb.get("cells", [])
+            if not cells:
+                st.info("셀이 없는 노트북입니다.")
+            for idx, cell in enumerate(cells):
+                cell_type = cell.get("cell_type", "")
+                source = "".join(cell.get("source", []))
+                if not source.strip():
+                    continue
+                if cell_type == "markdown":
+                    st.markdown(source)
+                elif cell_type == "code":
+                    st.code(source, language="python")
+                else:
+                    st.text(source)
+
+    except Exception as e:
+        st.error(f"파일을 읽을 수 없습니다: {e}")
 
 st.markdown("---")
 
