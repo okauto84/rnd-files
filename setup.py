@@ -241,8 +241,8 @@ st.markdown("""
 st.markdown("#### 📂 디렉토리 구조")
 st.caption(f"기준 경로: `{BASE_DIR}`")
 
-tree_data: dict = build_tree(BASE_DIR)
-tree_html = tree_to_html(tree_data, depth=0)
+tree_data = build_tree(BASE_DIR)
+tree_html = tree_to_html(tree_data, depth=0) if tree_data else "<p>표시할 파일이 없습니다.</p>"
 
 st.markdown(
     f'<div style="background:#f8f9fa; border:1px solid #dee2e6; border-radius:8px;'
@@ -251,6 +251,13 @@ st.markdown(
     f'</div>',
     unsafe_allow_html=True,
 )
+
+# 트리 구조 dict (화면 하단 출력)
+st.markdown("##### 📋 트리 구조 (dict)")
+if tree_data is not None:
+    st.json(tree_data)
+else:
+    st.caption("트리 데이터가 없습니다. (허용 확장자 파일이 없거나 경로를 확인하세요.)")
 
 # ── 선택된 파일 내용 표시 ────────────────────────────────────────────────────
 if st.session_state.selected_file:
