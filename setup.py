@@ -3,6 +3,7 @@
 import os
 import time
 import pathlib
+import pandas as pd
 import streamlit as st
 from openai import OpenAI
 
@@ -49,42 +50,36 @@ def build_tree(path: pathlib.Path) -> dict:
     return node
 
 
-def tree_to_html(node: dict, depth: int = 0) -> str:
-    """트리 dict를 <details>/<summary> 기반 HTML 문자열로 변환.
-    summary::before CSS로 닫힘=＋, 열림=－ 표시.
+def render_tree_native(node: dict, depth: int = 0):
+    """트리를 Streamlit 네이티브 컴포넌트로 렌더링.
+    - 폴더: st.expander (CSS로 +/- 표시)
+    - .md/.csv 파일: st.button (클릭 시 session_state에 경로 저장)
+    - 기타 파일: 일반 텍스트
     """
-    indent_px = depth * 20
+    name = node["name"]
+    ext = pathlib.Path(name).suffix.lower()
+
     if node["type"] == "dir":
-        children_html = "".join(
-            tree_to_html(child, depth + 1)
-            for child in node.get("children", [])
-        )
-        open_attr = "open" if depth == 0 else ""
         child_count = len(node.get("children", []))
-        count_badge = (
-            f'<span style="font-size:0.72rem;color:#888;margin-left:6px;">({child_count})</span>'
-        )
-        return (
-            f'<details {open_attr} class="tree-node" style="margin-left:{indent_px}px; margin-top:2px;">'
-            f'<summary style="cursor:pointer; padding:3px 4px; border-radius:4px; '
-            f'list-style:none; display:flex; align-items:center; gap:4px; '
-            f'font-size:0.88rem; user-select:none;">'
-            f'<span class="tree-toggle"></span>'
-            f'📁 <b>{node["name"]}</b>{count_badge}'
-            f'</summary>'
-            f'<div style="border-left:1px dashed #ccc; margin-left:12px; padding-left:4px;">'
-            f'{children_html}'
-            f'</div>'
-            f'</details>'
-        )
+        with st.expander(f"📁 {name}  ({child_count})", expanded=(depth == 0)):
+            for child in node.get("children", []):
+                render_tree_native(child, depth + 1)
     else:
-        icon = _file_icon(node["name"])
-        return (
-            f'<div style="margin-left:{indent_px + 20}px; padding:2px 4px; '
-            f'font-size:0.85rem; color:#333;">'
-            f'{icon} {node["name"]}'
-            f'</div>'
-        )
+        icon = _file_icon(name)
+        if ext in (".md", ".csv"):
+            if st.button(
+                f"{icon} {name}",
+                key=f"filebtn_{node['path']}",
+                use_container_width=False,
+            ):
+                st.session_state.selected_file = node["path"]
+                st.session_state.selected_file_ext = ext
+        else:
+            st.markdown(
+                f'<p style="margin:1px 0; padding:1px 4px; font-size:0.82rem; '
+                f'font-family:monospace; color:#555;">{icon} {name}</p>',
+                unsafe_allow_html=True,
+            )
 
 
 def _file_icon(filename: str) -> str:
@@ -105,50 +100,97 @@ def _file_icon(filename: str) -> str:
 # 현재 스크립트 위치를 루트로 사용
 BASE_DIR = pathlib.Path(os.path.abspath(__file__)).parent
 
+# 세션 상태 초기화 (선택 파일)
+if "selected_file" not in st.session_state:
+    st.session_state.selected_file = None
+    st.session_state.selected_file_ext = None
+
+# ── 트리 CSS ──────────────────────────────────────────────────────────────────
+# expander 기본 화살표 숨기고 +/- 배지로 대체 / 파일 버튼을 링크처럼 스타일
+st.markdown("""
+<style>
+  /* 기본 expander 화살표 숨김 */
+  [data-testid="stExpander"] details summary svg { display: none !important; }
+
+  /* +/- 배지 */
+  [data-testid="stExpander"] details > summary::before {
+    content: "+";
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    font-size: 0.82rem;
+    font-weight: bold;
+    color: #555;
+    background: #e9ecef;
+    border: 1px solid #ced4da;
+    border-radius: 3px;
+    margin-right: 6px;
+    flex-shrink: 0;
+  }
+  [data-testid="stExpander"] details[open] > summary::before { content: "−"; }
+
+  /* 파일 버튼: 링크 스타일 */
+  [data-testid="stExpander"] [data-testid="stBaseButton-secondary"] {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 1px 4px !important;
+    font-size: 0.82rem !important;
+    font-family: monospace !important;
+    color: #1a6cc4 !important;
+    height: auto !important;
+    min-height: unset !important;
+    line-height: 1.5 !important;
+    text-align: left !important;
+  }
+  [data-testid="stExpander"] [data-testid="stBaseButton-secondary"]:hover {
+    color: #0044aa !important;
+    background: #e8f0fe !important;
+    text-decoration: underline !important;
+  }
+</style>
+""", unsafe_allow_html=True)
+
 st.markdown("#### 📂 디렉토리 구조")
 st.caption(f"기준 경로: `{BASE_DIR}`")
 
 # 트리 데이터를 변수에 저장
 tree_data: dict = build_tree(BASE_DIR)
 
-# +/- 토글 CSS
-TREE_CSS = """
-<style>
-  .tree-toggle::before {
-    content: "+";
-    display: inline-block;
-    width: 14px;
-    height: 14px;
-    line-height: 14px;
-    text-align: center;
-    font-size: 0.85rem;
-    font-weight: bold;
-    color: #555;
-    background: #e9ecef;
-    border: 1px solid #ced4da;
-    border-radius: 3px;
-    margin-right: 2px;
-    flex-shrink: 0;
-  }
-  details[open] > summary .tree-toggle::before {
-    content: "−";
-  }
-  details > summary:hover {
-    background: #e9ecef;
-  }
-</style>
-"""
-
 # 계층 구조(트리) 화면 출력
-tree_html = tree_to_html(tree_data, depth=0)
-st.markdown(
-    TREE_CSS +
-    f'<div style="background:#f8f9fa; border:1px solid #dee2e6; border-radius:8px; '
-    f'padding:16px; max-height:520px; overflow-y:auto; font-family:monospace;">'
-    f'{tree_html}'
-    f'</div>',
-    unsafe_allow_html=True,
-)
+render_tree_native(tree_data, depth=0)
+
+# ── 선택된 파일 내용 표시 ────────────────────────────────────────────────────
+if st.session_state.selected_file:
+    fp = pathlib.Path(st.session_state.selected_file)
+    ext = st.session_state.selected_file_ext
+
+    st.markdown("---")
+    col_title, col_close = st.columns([11, 1])
+    with col_title:
+        st.markdown(f"##### 📄 {fp.name}")
+        st.caption(str(fp))
+    with col_close:
+        if st.button("✕ 닫기", key="close_preview"):
+            st.session_state.selected_file = None
+            st.session_state.selected_file_ext = None
+            st.rerun()
+
+    if ext == ".md":
+        try:
+            content = fp.read_text(encoding="utf-8")
+            st.markdown(content)
+        except Exception as e:
+            st.error(f"파일을 읽을 수 없습니다: {e}")
+
+    elif ext == ".csv":
+        try:
+            df = pd.read_csv(str(fp))
+            st.dataframe(df, use_container_width=True)
+        except Exception as e:
+            st.error(f"파일을 읽을 수 없습니다: {e}")
 
 st.markdown("---")
 
@@ -159,7 +201,7 @@ st.markdown("---")
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-st.markdown("#### 💬 챗봇")
+st.markdown("#### 💬 Q&A")
 
 
 def call_openai_api(messages: list) -> str:
