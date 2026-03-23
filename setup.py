@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 
+import os
 import time
+import json
+import pathlib
 import streamlit as st
+from openai import OpenAI
 
 
 # 페이지 설정
@@ -19,11 +23,115 @@ except:
 
 model_name = "gpt-5.4"
 
+
+# ── 디렉토리 트리 ──────────────────────────────────────────────────────────────
+
+def build_tree(path: pathlib.Path) -> dict:
+    """경로를 재귀적으로 읽어 트리 구조 dict 반환.
+    디렉토리는 children 리스트를 포함하며, 파일은 포함하지 않는다.
+    """
+    node = {
+        "name": path.name or str(path),
+        "type": "dir" if path.is_dir() else "file",
+        "path": str(path),
+    }
+    if path.is_dir():
+        children = []
+        try:
+            entries = sorted(
+                path.iterdir(),
+                key=lambda p: (p.is_file(), p.name.lower())
+            )
+            for child in entries:
+                children.append(build_tree(child))
+        except PermissionError:
+            pass
+        node["children"] = children
+    return node
+
+
+def tree_to_html(node: dict, depth: int = 0) -> str:
+    """트리 dict를 <details>/<summary> 기반 HTML 문자열로 변환."""
+    indent_px = depth * 20
+    if node["type"] == "dir":
+        children_html = "".join(
+            tree_to_html(child, depth + 1)
+            for child in node.get("children", [])
+        )
+        open_attr = "open" if depth == 0 else ""
+        child_count = len(node.get("children", []))
+        count_badge = (
+            f'<span style="font-size:0.72rem;color:#888;margin-left:6px;">({child_count})</span>'
+        )
+        return (
+            f'<details {open_attr} style="margin-left:{indent_px}px; margin-top:2px;">'
+            f'<summary style="cursor:pointer; padding:3px 4px; border-radius:4px; '
+            f'list-style:none; display:flex; align-items:center; gap:4px; '
+            f'font-size:0.88rem;">'
+            f'📁 <b>{node["name"]}</b>{count_badge}'
+            f'</summary>'
+            f'<div style="border-left:1px dashed #ccc; margin-left:8px; padding-left:4px;">'
+            f'{children_html}'
+            f'</div>'
+            f'</details>'
+        )
+    else:
+        icon = _file_icon(node["name"])
+        return (
+            f'<div style="margin-left:{indent_px + 16}px; padding:2px 4px; '
+            f'font-size:0.85rem; color:#333;">'
+            f'{icon} {node["name"]}'
+            f'</div>'
+        )
+
+
+def _file_icon(filename: str) -> str:
+    """확장자별 파일 아이콘 반환."""
+    ext = pathlib.Path(filename).suffix.lower()
+    icons = {
+        ".py": "🐍", ".js": "🟨", ".ts": "🔷", ".tsx": "🔷", ".jsx": "🟨",
+        ".html": "🌐", ".css": "🎨", ".json": "📋", ".yaml": "📋", ".yml": "📋",
+        ".md": "📝", ".txt": "📄", ".csv": "📊", ".xlsx": "📊", ".xls": "📊",
+        ".png": "🖼️", ".jpg": "🖼️", ".jpeg": "🖼️", ".gif": "🖼️", ".svg": "🖼️",
+        ".pdf": "📕", ".zip": "📦", ".tar": "📦", ".gz": "📦",
+        ".sh": "⚙️", ".bat": "⚙️", ".toml": "⚙️", ".cfg": "⚙️", ".ini": "⚙️",
+        ".env": "🔑", ".gitignore": "🚫",
+    }
+    return icons.get(ext, "📄")
+
+
+# 현재 스크립트 위치를 루트로 사용
+BASE_DIR = pathlib.Path(os.path.abspath(__file__)).parent
+
+st.markdown("#### 📂 디렉토리 구조")
+st.caption(f"기준 경로: `{BASE_DIR}`")
+
+# 트리 데이터를 변수에 저장
+tree_data: dict = build_tree(BASE_DIR)
+
+# 버튼으로 데이터(JSON) 확인 가능
+with st.expander("📋 트리 데이터 (JSON)", expanded=False):
+    st.json(tree_data)
+
+# 계층 구조(트리) 화면 출력
+tree_html = tree_to_html(tree_data, depth=0)
+st.markdown(
+    f'<div style="background:#f8f9fa; border:1px solid #dee2e6; border-radius:8px; '
+    f'padding:16px; max-height:520px; overflow-y:auto; font-family:monospace;">'
+    f'{tree_html}'
+    f'</div>',
+    unsafe_allow_html=True,
+)
+
+st.markdown("---")
+
+
+# ── 챗봇 ──────────────────────────────────────────────────────────────────────
+
 # 세션 상태 초기화
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# 챗봇 섹션
 st.markdown("#### 💬 챗봇")
 
 
