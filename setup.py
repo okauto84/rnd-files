@@ -2,7 +2,6 @@
 
 import os
 import time
-import json
 import pathlib
 import streamlit as st
 from openai import OpenAI
@@ -51,7 +50,9 @@ def build_tree(path: pathlib.Path) -> dict:
 
 
 def tree_to_html(node: dict, depth: int = 0) -> str:
-    """트리 dict를 <details>/<summary> 기반 HTML 문자열로 변환."""
+    """트리 dict를 <details>/<summary> 기반 HTML 문자열로 변환.
+    summary::before CSS로 닫힘=＋, 열림=－ 표시.
+    """
     indent_px = depth * 20
     if node["type"] == "dir":
         children_html = "".join(
@@ -64,13 +65,14 @@ def tree_to_html(node: dict, depth: int = 0) -> str:
             f'<span style="font-size:0.72rem;color:#888;margin-left:6px;">({child_count})</span>'
         )
         return (
-            f'<details {open_attr} style="margin-left:{indent_px}px; margin-top:2px;">'
+            f'<details {open_attr} class="tree-node" style="margin-left:{indent_px}px; margin-top:2px;">'
             f'<summary style="cursor:pointer; padding:3px 4px; border-radius:4px; '
             f'list-style:none; display:flex; align-items:center; gap:4px; '
-            f'font-size:0.88rem;">'
+            f'font-size:0.88rem; user-select:none;">'
+            f'<span class="tree-toggle"></span>'
             f'📁 <b>{node["name"]}</b>{count_badge}'
             f'</summary>'
-            f'<div style="border-left:1px dashed #ccc; margin-left:8px; padding-left:4px;">'
+            f'<div style="border-left:1px dashed #ccc; margin-left:12px; padding-left:4px;">'
             f'{children_html}'
             f'</div>'
             f'</details>'
@@ -78,7 +80,7 @@ def tree_to_html(node: dict, depth: int = 0) -> str:
     else:
         icon = _file_icon(node["name"])
         return (
-            f'<div style="margin-left:{indent_px + 16}px; padding:2px 4px; '
+            f'<div style="margin-left:{indent_px + 20}px; padding:2px 4px; '
             f'font-size:0.85rem; color:#333;">'
             f'{icon} {node["name"]}'
             f'</div>'
@@ -109,13 +111,38 @@ st.caption(f"기준 경로: `{BASE_DIR}`")
 # 트리 데이터를 변수에 저장
 tree_data: dict = build_tree(BASE_DIR)
 
-# 버튼으로 데이터(JSON) 확인 가능
-with st.expander("📋 트리 데이터 (JSON)", expanded=False):
-    st.json(tree_data)
+# +/- 토글 CSS
+TREE_CSS = """
+<style>
+  .tree-toggle::before {
+    content: "+";
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    line-height: 14px;
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #555;
+    background: #e9ecef;
+    border: 1px solid #ced4da;
+    border-radius: 3px;
+    margin-right: 2px;
+    flex-shrink: 0;
+  }
+  details[open] > summary .tree-toggle::before {
+    content: "−";
+  }
+  details > summary:hover {
+    background: #e9ecef;
+  }
+</style>
+"""
 
 # 계층 구조(트리) 화면 출력
 tree_html = tree_to_html(tree_data, depth=0)
 st.markdown(
+    TREE_CSS +
     f'<div style="background:#f8f9fa; border:1px solid #dee2e6; border-radius:8px; '
     f'padding:16px; max-height:520px; overflow-y:auto; font-family:monospace;">'
     f'{tree_html}'
