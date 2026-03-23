@@ -21,17 +21,35 @@ model_name = "gpt-5.4"
 
 # ── 디렉토리 트리 ──────────────────────────────────────────────────────────────
 
+SCRIPT_DIR = pathlib.Path(__file__).resolve().parent
+FILES_JSON_PATH = SCRIPT_DIR / "files.json"
 
-def _find_server_dir() -> pathlib.Path:
-    """'Server' 폴더를 CWD → 스크립트 위치 순으로 탐색."""
-    for base in (pathlib.Path(os.getcwd()), pathlib.Path(os.path.abspath(__file__)).parent):
-        sub = base / "Server"
-        if sub.is_dir():
-            return sub
-        for i, part in enumerate(base.parts):
-            if part.lower() == "server":
-                return pathlib.Path(*base.parts[: i + 1])
-    return pathlib.Path(os.getcwd())
+
+@st.cache_data(show_spinner="files.json 로드 중…")
+def _load_files_manifest(json_path_str: str, _mtime: float) -> dict:
+    with open(json_path_str, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _is_dir_node(node: dict) -> bool:
+    return node.get("type") in ("directory", "dir")
+
+
+def _is_file_node(node: dict) -> bool:
+    return node.get("type") in ("file",)
+
+
+def apply_structure_from_tree(parent: pathlib.Path, node: dict) -> None:
+    """files.json 트리 노드 기준으로 parent 아래에 폴더·빈 파일을 만든다."""
+    if _is_dir_node(node):
+        here = parent / node["name"]
+        here.mkdir(parents=True, exist_ok=True)
+        for child in node.get("children") or []:
+            apply_structure_from_tree(here, child)
+    elif _is_file_node(node):
+        fp = parent / node["name"]
+        fp.parent.mkdir(parents=True, exist_ok=True)
+        fp.touch(exist_ok=True)
 
 
 def build_tree(path: pathlib.Path) -> dict | None:
@@ -131,13 +149,32 @@ def build_qa_system_prompt(base_dir: pathlib.Path, tree_dict: dict | None) -> st
 
 # ── 앱 본문 ────────────────────────────────────────────────────────────────────
 
-BASE_DIR = _find_server_dir()
-
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
 st.markdown("#### 📂 디렉토리 구조")
-st.caption(f"기준 경로: `{BASE_DIR}`")
+
+if not FILES_JSON_PATH.is_file():
+    st.error(f"`files.json`을 찾을 수 없습니다: `{FILES_JSON_PATH}`")
+    st.stop()
+
+_mtime = FILES_JSON_PATH.stat().st_mtime
+manifest = _load_files_manifest(str(FILES_JSON_PATH), _mtime)
+tree_root = manifest.get("tree")
+if not tree_root or not _is_dir_node(tree_root):
+    st.error("`files.json`에 유효한 루트 `tree`(directory)가 없습니다.")
+    st.stop()
+
+BASE_DIR = SCRIPT_DIR / tree_root["name"]
+_apply_key = f"{FILES_JSON_PATH.resolve()}|{_mtime}"
+if st.session_state.get("_files_json_applied_key") != _apply_key:
+    apply_structure_from_tree(SCRIPT_DIR, tree_root)
+    st.session_state._files_json_applied_key = _apply_key
+
+st.caption(
+    f"정의 파일: `{FILES_JSON_PATH}` · 기준 경로: `{BASE_DIR}`"
+    + (f" · 원본 루트: `{manifest.get('root_path', '')}`" if manifest.get("root_path") else "")
+)
 
 tree_data = build_tree(BASE_DIR)
 _tree_html = tree_to_html(tree_data) if tree_data else "<p>표시할 파일이 없습니다.</p>"
