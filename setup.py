@@ -5,7 +5,6 @@ import html as _html
 import time
 import pathlib
 import streamlit as st
-import streamlit.components.v1 as components
 from openai import OpenAI
 
 
@@ -112,25 +111,54 @@ st.caption(f"기준 경로: `{BASE_DIR}`")
 tree_data = build_tree(BASE_DIR)
 _tree_html = tree_to_html(tree_data) if tree_data else "<p>표시할 파일이 없습니다.</p>"
 
-components.html(
-    "<!DOCTYPE html><html><head><meta charset='utf-8'><style>"
-    "html,body{margin:0;padding:0}"
-    "body{padding:12px;font-family:monospace;background:#f8f9fa;"
-    "border:1px solid #dee2e6;border-radius:8px}"
-    ".tree-toggle::before{content:'+';display:inline-flex;align-items:center;"
-    "justify-content:center;width:16px;height:16px;font-size:.82rem;font-weight:bold;"
-    "color:#555;background:#e9ecef;border:1px solid #ced4da;border-radius:3px;"
-    "margin-right:4px;flex-shrink:0}"
-    "details[open]>summary .tree-toggle::before{content:'−'}"
-    "details>summary{cursor:pointer;padding:3px 4px;border-radius:4px;"
-    "list-style:none;display:flex;align-items:center;gap:4px;"
-    "font-size:.88rem;user-select:none}"
-    "details>summary:hover{background:#f1f3f5}"
-    "</style></head><body>"
+# iframe(components.html) 고정 높이 대신 메인 문서에 렌더 → 접힌 만큼만 높이 사용, 펼치면 자동 증가
+st.markdown(
+    """
+<style>
+  .tree-panel-wrap {
+    font-family: monospace;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 12px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .tree-panel-wrap .tree-toggle::before {
+    content: "+";
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    font-size: 0.82rem;
+    font-weight: bold;
+    color: #555;
+    background: #e9ecef;
+    border: 1px solid #ced4da;
+    border-radius: 3px;
+    margin-right: 4px;
+    flex-shrink: 0;
+  }
+  .tree-panel-wrap details[open] > summary .tree-toggle::before { content: "−"; }
+  .tree-panel-wrap details > summary {
+    cursor: pointer;
+    padding: 3px 4px;
+    border-radius: 4px;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.88rem;
+    user-select: none;
+  }
+  .tree-panel-wrap details > summary:hover { background: #f1f3f5; }
+</style>
+<div class="tree-panel-wrap">
+"""
     + _tree_html
-    + "</body></html>",
-    height=500,
-    scrolling=True,
+    + "</div>",
+    unsafe_allow_html=True,
 )
 
 st.markdown("---")
