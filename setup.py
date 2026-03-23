@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import time
+import streamlit as st
+
 
 # 페이지 설정
 st.set_page_config(
