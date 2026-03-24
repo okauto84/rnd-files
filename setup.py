@@ -18,6 +18,9 @@ except:
 
 model_name = "gpt-5-mini"
 
+# OpenAI 요청에 넣는 디렉터리 트리 JSON 문자열 최대 길이(유니코드 문자 기준)
+TREE_JSON_MAX_CHARS = 5_000
+
 
 # ── 디렉토리 트리 ──────────────────────────────────────────────────────────────
 
@@ -118,16 +121,71 @@ def tree_to_html(node: dict, depth: int = 0) -> str:
     )
 
 
+def _tree_json_compact(obj: dict) -> str:
+    return json.dumps(obj, ensure_ascii=False, separators=(",", ":"))
+
+
+def _prune_one_node_from_tree(dir_node: dict) -> bool:
+    """오른쪽·깊은 쪽부터 파일·폴더 노드 하나를 제거. 제거했으면 True."""
+    children = dir_node.get("children") or []
+    if not children:
+        return False
+    i = len(children) - 1
+    last = children[i]
+    if last.get("type") == "dir":
+        if _prune_one_node_from_tree(last):
+            return True
+        children.pop(i)
+        return True
+    children.pop(i)
+    return True
+
+
+def tree_dict_to_limited_json(tree_dict: dict | None, max_chars: int = TREE_JSON_MAX_CHARS) -> tuple[str, bool]:
+    """트리 dict를 JSON 문자열로 만들되, 전체 길이가 max_chars를 넘지 않게 잘라낸다."""
+    if not tree_dict:
+        return "{}", False
+    data = json.loads(json.dumps(tree_dict, ensure_ascii=False))
+    truncated = False
+    s = _tree_json_compact(data)
+    while len(s) > max_chars:
+        if data.get("type") != "dir":
+            stub = {
+                "type": data.get("type", "file"),
+                "name": data.get("name", ""),
+                "path": (data.get("path") or "")[: max(0, max_chars - 200)],
+                "_truncated": True,
+            }
+            s = _tree_json_compact(stub)
+            if len(s) > max_chars:
+                s = s[:max_chars]
+            truncated = True
+            break
+        if not _prune_one_node_from_tree(data):
+            s = s[:max_chars]
+            truncated = True
+            break
+        truncated = True
+        s = _tree_json_compact(data)
+    return s, truncated
+
+
 def build_qa_system_prompt(base_dir: pathlib.Path, tree_dict: dict | None) -> str:
     """OpenAPI 질의응답용 시스템 프롬프트. 디렉터리 트리(JSON)를 근거로 답하도록 지시."""
-    tree_json = json.dumps(tree_dict, ensure_ascii=False, indent=2) if tree_dict else "{}"
+    tree_json, tree_was_truncated = tree_dict_to_limited_json(tree_dict)
+    truncation_notice = ""
+    if tree_was_truncated:
+        truncation_notice = (
+            f"\n> **참고:** 아래 디렉터리 트리 JSON은 API용 길이 제한(**최대 {TREE_JSON_MAX_CHARS}자**)으로 "
+            "일부 노드가 생략되었을 수 있습니다. 답변 시 이 점을 고려하세요.\n"
+        )
     return f"""당신은 아래에 주어진 **디렉터리 트리 정보**만을 근거로 사용자의 질문에 답하는 도우미입니다.
 
 ## 기준 루트 경로
 `{base_dir}`
 
 이 트리에는 기준 경로 아래에서 읽을 수 있는 **모든 파일과 폴더**가 포함됩니다(확장자 제한 없음).
-
+{truncation_notice}
 ## 디렉터리 트리 (JSON)
 각 노드의 의미:
 - `type`: `"dir"` 이면 폴더, `"file"` 이면 파일
