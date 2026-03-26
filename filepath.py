@@ -1,6 +1,8 @@
 """
 현재 작업 디렉터리(또는 인자로 준 루트) 아래의 모든 디렉터리 경로만 수집하여 JSON으로 저장합니다.
-파일은 기록하지 않습니다.
+.git 및 .ipynb_checkpoints 폴더는 항상 제외합니다.
+실제 파일 목록은 스캔하지 않으며, 최하위(리프) 디렉터리에는 readme.md가 하나 있다고 가정해 해당 경로만 JSON에 포함합니다.
+기본 출력 파일은 filepath.json 입니다.
 """
 
 from __future__ import annotations
@@ -14,6 +16,8 @@ from pathlib import Path
 
 def should_skip_dir(name: str, skip_hidden: bool) -> bool:
     if name == ".git":
+        return True
+    if name == ".ipynb_checkpoints":
         return True
     if skip_hidden and name.startswith("."):
         return True
@@ -37,8 +41,28 @@ def collect_directories(root: Path, skip_hidden: bool) -> list[Path]:
     return unique
 
 
+def path_relative_to_cwd(p: Path, cwd: Path) -> str:
+    try:
+        rel = p.resolve().relative_to(cwd.resolve())
+    except ValueError:
+        rel = p.resolve()
+    return rel.as_posix()
+
+
+def is_leaf_directory(dir_path: Path, all_dirs: set[Path]) -> bool:
+    for other in all_dirs:
+        if other == dir_path:
+            continue
+        try:
+            other.relative_to(dir_path)
+            return False
+        except ValueError:
+            continue
+    return True
+
+
 def main() -> None:
-    parser = argparse.ArgumentParser(description="하위 폴더 경로만 수집하여 JSON 저장")
+    parser = argparse.ArgumentParser(description="하위 폴더 경로만 수집하여 JSON 저장 (리프에 readme.md 경로 포함)")
     parser.add_argument(
         "root",
         nargs="?",
@@ -48,8 +72,8 @@ def main() -> None:
     parser.add_argument(
         "-o",
         "--output",
-        default="directories.json",
-        help="저장할 JSON 파일 경로 (기본: directories.json)",
+        default="filepath.json",
+        help="저장할 JSON 파일 경로 (기본: filepath.json)",
     )
     parser.add_argument(
         "--include-hidden",
@@ -58,13 +82,27 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    cwd = Path.cwd()
     root = Path(args.root).expanduser()
     directories = collect_directories(root, skip_hidden=not args.include_hidden)
+    dir_set = set(directories)
+
+    dir_rel = [path_relative_to_cwd(p, cwd) for p in directories]
+
+    readme_entries: list[dict[str, str]] = []
+    for p in directories:
+        if not is_leaf_directory(p, dir_set):
+            continue
+        d_rel = path_relative_to_cwd(p, cwd)
+        readme_rel = f"{d_rel.rstrip('/')}/readme.md"
+        readme_entries.append({"directory": d_rel, "readme_md": readme_rel})
 
     payload = {
+        "cwd": str(cwd.resolve()),
         "root_path": str(root.resolve()),
         "saved_at": datetime.now(timezone.utc).isoformat(),
-        "directories": [str(p) for p in directories],
+        "directories": dir_rel,
+        "readme_md_by_leaf": readme_entries,
     }
 
     out_path = Path(args.output).expanduser()
@@ -72,6 +110,7 @@ def main() -> None:
     out_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"JSON 저장: {out_path.resolve()}")
     print(f"디렉터리 수: {len(directories)}")
+    print(f"리프 디렉터리(가정 readme.md) 수: {len(readme_entries)}")
 
 
 if __name__ == "__main__":
